@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "quilt_loader": {
+    "group": "dev.mrsterner",
+    "id": "guardvillagers",
+    "version": "${version}",
+    "metadata": {
+      "name": "Guard Villagers - Quilt",
+      "description": "Guards that help with village pest control",
+      "contributors": {
+        "Me!": "MrSterner"
+      },
+      "icon": "assets/guardvillagers/icon.png",
+      "license": "MIT",
+      "contact": {
+        "homepage": "https://www.curseforge.com/minecraft/mc-mods/guard-villagers-quilt",
+        "sources": "https://github.com/MrSterner/GuardVillagers",
+        "issues": "https://github.com/MrSterner/GuardVillagers/issues"
+      }
+    },
+    "intermediate_mappings": "net.fabricmc:intermediary",
+    "entrypoints": {
+      "init": [
+        "dev.mrsterner.guardvillagers.GuardVillagers"
+      ],
+      "client_init": [
+      "dev.mrsterner.guardvillagers.GuardVillagersClient"
+      ]
+    },
+    "depends": [
+      {
+        "id": "quilt_loader",
+        "versions": ">=0.16.0-"
+      },
+      {
+        "id": "quilted_fabric_api",
+        "versions": ">=1.0.0-"
+      },
+      {
+        "id": "minecraft",
+        "versions": ">=1.18.2"
+      }
+    ]
+  },
+  "mixin": "guardvillagers.mixins.json"
+}

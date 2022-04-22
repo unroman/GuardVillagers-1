@@ -1,26 +1,14 @@
 package dev.mrsterner.guardvillagers;
 
-import dev.mrsterner.guardvillagers.client.model.GuardArmorModel;
-import dev.mrsterner.guardvillagers.client.model.GuardSteveModel;
-import dev.mrsterner.guardvillagers.client.model.GuardVillagerModel;
-import dev.mrsterner.guardvillagers.client.renderer.GuardRenderer;
-import dev.mrsterner.guardvillagers.client.screen.GuardVillagerScreen;
+import org.quiltmc.loader.api.ModContainer;
+import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
 import dev.mrsterner.guardvillagers.client.screen.GuardVillagerScreenHandler;
 import dev.mrsterner.guardvillagers.common.entity.GuardEntity;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
-import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.effect.StatusEffects;
@@ -34,16 +22,16 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.World;
+
 
 import java.util.function.Predicate;
 
 public class GuardVillagers implements ModInitializer {
 	public static final String MODID = "guardvillagers";
-	public static GuardVillagersConfig config;
+	//TODO public static GuardVillagersConfig config;
 
 	public static final ScreenHandlerType<GuardVillagerScreenHandler> GUARD_SCREEN_HANDLER = ScreenHandlerRegistry.registerExtended(new Identifier(GuardVillagers.MODID, "guard_screen"), GuardVillagerScreenHandler::new);
 
@@ -54,9 +42,9 @@ public class GuardVillagers implements ModInitializer {
 	public static final Item GUARD_SPAWN_EGG = new SpawnEggItem(GUARD_VILLAGER ,5651507, 8412749, new FabricItemSettings().group(ItemGroup.MISC));
 
 	@Override
-	public void onInitialize() {
-		AutoConfig.register(GuardVillagersConfig.class, GsonConfigSerializer::new);
-		config = AutoConfig.getConfigHolder(GuardVillagersConfig.class).getConfig();
+	public void onInitialize(ModContainer modContainer) {
+		//TODO AutoConfig.register(GuardVillagersConfig.class, GsonConfigSerializer::new);
+		//config = AutoConfig.getConfigHolder(GuardVillagersConfig.class).getConfig();
 		FabricDefaultAttributeRegistry.register(GUARD_VILLAGER, GuardEntity.createAttributes());
 		Registry.register(Registry.ITEM, new Identifier(MODID, "guard_spawn_egg"), GUARD_SPAWN_EGG);
 
@@ -70,7 +58,7 @@ public class GuardVillagers implements ModInitializer {
 				if (target instanceof VillagerEntity villagerEntity) {
 					if (!villagerEntity.isBaby()) {
 						if (villagerEntity.getVillagerData().getProfession() == VillagerProfession.NONE || villagerEntity.getVillagerData().getProfession() == VillagerProfession.NITWIT) {
-							if (!GuardVillagersConfig.get().ConvertVillagerIfHaveHOTV || player.hasStatusEffect(StatusEffects.HERO_OF_THE_VILLAGE) && GuardVillagersConfig.get().ConvertVillagerIfHaveHOTV) {
+							if (/*TODO !GuardVillagersConfig.get().ConvertVillagerIfHaveHOTV || */player.hasStatusEffect(StatusEffects.HERO_OF_THE_VILLAGE) /*TODO && GuardVillagersConfig.get().ConvertVillagerIfHaveHOTV*/) {
 								convertVillager(villagerEntity, player, world);
 								if (!player.getAbilities().creativeMode)
 									itemStack.decrement(1);
@@ -90,7 +78,7 @@ public class GuardVillagers implements ModInitializer {
 
 
 	public static boolean hotvChecker(PlayerEntity player) {
-		return player.hasStatusEffect(StatusEffects.HERO_OF_THE_VILLAGE) && GuardVillagersConfig.get().giveGuardStuffHOTV || !GuardVillagersConfig.get().giveGuardStuffHOTV;
+		return player.hasStatusEffect(StatusEffects.HERO_OF_THE_VILLAGE) /*TODO && GuardVillagersConfig.get().giveGuardStuffHOTV || !GuardVillagersConfig.get().giveGuardStuffHOTV*/;
 	}
 
 	public static Hand getHandWith(LivingEntity livingEntity, Predicate<Item> itemPredicate) {

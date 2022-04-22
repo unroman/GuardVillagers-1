@@ -1,9 +1,5 @@
 package dev.mrsterner.guardvillagers;
-
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
+/*
 
 import java.util.Arrays;
 import java.util.List;
@@ -73,3 +69,6 @@ public class GuardVillagersConfig implements ConfigData {
         return AutoConfig.getConfigHolder(GuardVillagersConfig.class).getConfig();
     }
 }
+
+
+ */

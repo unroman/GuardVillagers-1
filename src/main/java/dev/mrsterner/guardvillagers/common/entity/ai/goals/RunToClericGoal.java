@@ -1,6 +1,5 @@
 package dev.mrsterner.guardvillagers.common.entity.ai.goals;
 
-import dev.mrsterner.guardvillagers.GuardVillagersConfig;
 import dev.mrsterner.guardvillagers.common.entity.GuardEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.effect.StatusEffects;
@@ -25,7 +24,7 @@ public class RunToClericGoal extends Goal {
                 if (mob != null) {
                     if (mob.getVillagerData().getProfession() == VillagerProfession.CLERIC && guard.getHealth() < guard.getMaxHealth() && guard.getTarget() == null && !guard.hasStatusEffect(StatusEffects.REGENERATION)) {
                         this.cleric = mob;
-                        return GuardVillagersConfig.get().ClericHealing;
+                        return true; /*TODO GuardVillagersConfig.get().ClericHealing;*/
                     }
                 }
             }

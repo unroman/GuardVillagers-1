@@ -12,7 +12,7 @@ public interface ServerPlayerEntityAccessor {
 	@Invoker("incrementScreenHandlerSyncId")
 	public void incrementScreenHandlerSyncId();
 
-	@Invoker("onScreenHandlerOpened")
+	@Invoker("onSpawn")
 	public void onScreenHandlerOpened(ScreenHandler screenHandler);
 
 	@Accessor("screenHandlerSyncId")

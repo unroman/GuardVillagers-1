@@ -1,6 +1,5 @@
 package dev.mrsterner.guardvillagers.common.entity.ai.goals;
 
-import dev.mrsterner.guardvillagers.GuardVillagersConfig;
 import dev.mrsterner.guardvillagers.common.entity.GuardEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.RangedAttackMob;
@@ -39,7 +38,7 @@ public class RaiseShieldGoal extends Goal {
 
     @Override
     public void stop() {
-        if (!GuardVillagersConfig.get().GuardAlwaysShield)
+        if (false/*TODO !GuardVillagersConfig.get().GuardAlwaysShield*/)
             guard.stopUsingItem();
     }
 
@@ -47,7 +46,7 @@ public class RaiseShieldGoal extends Goal {
         LivingEntity target = guard.getTarget();
         if (target != null && guard.shieldCoolDown == 0) {
             boolean ranged = guard.getMainHandStack().getItem() instanceof CrossbowItem || guard.getMainHandStack().getItem() instanceof BowItem;
-            return guard.distanceTo(target) <= 4.0D || target instanceof CreeperEntity || target instanceof RangedAttackMob && target.distanceTo(guard) >= 5.0D && !ranged || target instanceof RavagerEntity || GuardVillagersConfig.get().GuardAlwaysShield;
+            return guard.distanceTo(target) <= 4.0D || target instanceof CreeperEntity || target instanceof RangedAttackMob && target.distanceTo(guard) >= 5.0D && !ranged || target instanceof RavagerEntity || true/*TODO || GuardVillagersConfig.get().GuardAlwaysShield*/;
         }
         return false;
     }
