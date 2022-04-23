@@ -1,8 +1,5 @@
 package dev.mrsterner.guardvillagers.client.compat;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.Screen;
 /*
 
 @Environment(EnvType.CLIENT)
