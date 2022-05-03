@@ -5,8 +5,11 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Dynamic;
 import dev.mrsterner.guardvillagers.common.entity.ai.brain.CitizenBrain;
+import dev.mrsterner.guardvillagers.mixin.MobEntityAccessor;
+import net.minecraft.entity.EntityData;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Npc;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
@@ -20,17 +23,27 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.InventoryChangedListener;
+import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.DebugInfoSender;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.LocalDifficulty;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.UUID;
 
-public class CitizenEntity extends PassiveEntity implements Npc {
+public class CitizenEntity extends PassiveEntity implements Npc, InventoryChangedListener {
+    public SimpleInventory citizenInventory = new SimpleInventory(3 * 9);
+    public SimpleInventory citizenEquipment = new SimpleInventory(6);
     private static final TrackedData<Optional<BlockPos>> BED_POS = DataTracker.registerData(CitizenEntity.class, TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
     private static final TrackedData<Boolean> IS_SLEEPING = DataTracker.registerData(CitizenEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> IS_CHILD = DataTracker.registerData(CitizenEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
@@ -54,14 +67,12 @@ public class CitizenEntity extends PassiveEntity implements Npc {
 
     public CitizenEntity(EntityType<? extends PassiveEntity> entityType, World world) {
         super(entityType, world);
+        this.citizenInventory.addListener(this);
+        this.citizenEquipment.addListener(this);
         ((MobNavigation)this.getNavigation()).setCanPathThroughDoors(true);
         this.getNavigation().setCanSwim(true);
     }
 
-    @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-    }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
@@ -69,6 +80,67 @@ public class CitizenEntity extends PassiveEntity implements Npc {
         if (this.world instanceof ServerWorld) {
             this.reinitializeBrain((ServerWorld)this.world);
         }
+        if (nbt.contains("BedPosX")) {
+            int x = nbt.getInt("BedPosX");
+            int y = nbt.getInt("BedPosY");
+            int z = nbt.getInt("BedPosZ");
+            this.dataTracker.set(BED_POS, Optional.ofNullable(new BlockPos(x, y, z)));
+        }
+        NbtList listnbt = nbt.getList("Inventory", 10);
+        for (int i = 0; i < listnbt.size(); ++i) {
+            NbtCompound compoundnbt = listnbt.getCompound(i);
+            int j = compoundnbt.getByte("Slot") & 255;
+            this.citizenInventory.setStack(j, ItemStack.fromNbt(compoundnbt));
+        }
+
+        if (nbt.contains("ArmorItems", 9)) {
+            NbtList armorItems = nbt.getList("ArmorItems", 10);
+            for (int i = 0; i < ((MobEntityAccessor)this).armorItems().size(); ++i) {
+                int index = GuardEntity.slotToInventoryIndex(MobEntity.getPreferredEquipmentSlot(ItemStack.fromNbt(armorItems.getCompound(i))));
+                this.citizenEquipment.setStack(index, ItemStack.fromNbt(armorItems.getCompound(i)));
+            }
+        }
+        if (nbt.contains("HandItems", 9)) {
+            NbtList handItems = nbt.getList("HandItems", 10);
+            for (int i = 0; i < ((MobEntityAccessor)this).handItems().size(); ++i) {
+                int handSlot = i == 0 ? 5 : 4;
+                this.citizenEquipment.setStack(handSlot, ItemStack.fromNbt(handItems.getCompound(i)));
+            }
+        }
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        NbtList listnbt = new NbtList();
+        for (int i = 0; i < this.citizenInventory.size(); ++i) {
+            ItemStack itemstack = this.citizenInventory.getStack(i);
+            NbtCompound compoundnbt = new NbtCompound();
+            compoundnbt.putByte("Slot", (byte) i);
+            itemstack.writeNbt(compoundnbt);
+            listnbt.add(compoundnbt);
+        }
+        for (int i = 0; i < this.citizenEquipment.size(); ++i) {
+            ItemStack itemstack = this.citizenEquipment.getStack(i);
+            NbtCompound compoundnbt = new NbtCompound();
+            compoundnbt.putByte("Slot", (byte) i);
+            itemstack.writeNbt(compoundnbt);
+            listnbt.add(compoundnbt);
+        }
+        nbt.put("Inventory", listnbt);
+        if (this.getDataTracker().get(BED_POS).isPresent()) {
+            nbt.putInt("BedPosX", this.getDataTracker().get(BED_POS).get().getX());
+            nbt.putInt("BedPosY", this.getDataTracker().get(BED_POS).get().getY());
+            nbt.putInt("BedPosZ", this.getDataTracker().get(BED_POS).get().getZ());
+        }
+    }
+
+    @Nullable
+    @Override
+    public EntityData initialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, @Nullable EntityData entityData, @Nullable NbtCompound entityNbt) {
+        this.setPersistent();
+        this.initEquipment(world.getRandom(), difficulty);
+        return super.initialize(world, difficulty, spawnReason, entityData, entityNbt);
     }
 
     @Override
@@ -178,10 +250,27 @@ public class CitizenEntity extends PassiveEntity implements Npc {
     }
 
     @Override
+    public void sleep(BlockPos pos) {
+        super.sleep(pos);
+        this.brain.remember(MemoryModuleType.LAST_SLEPT, this.world.getTime());
+        this.brain.forget(MemoryModuleType.WALK_TARGET);
+        this.brain.forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+    }
+
+    @Override
+    public void wakeUp() {
+        super.wakeUp();
+        this.brain.remember(MemoryModuleType.LAST_WOKEN, this.world.getTime());
+    }
+
+    @Override
     public boolean isBaby() {
         return child;
     }
 
+    @Override
+    public void onInventoryChanged(Inventory sender) {
+    }
 
     public boolean isFemale() {
         return female;
@@ -247,4 +336,6 @@ public class CitizenEntity extends PassiveEntity implements Npc {
                 MemoryModuleType.NEAREST_ATTACKABLE
         );
     }
+
+
 }
